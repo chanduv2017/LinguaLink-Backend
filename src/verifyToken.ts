@@ -11,24 +11,26 @@ interface DecodedToken extends JwtPayload {
 }
 
 function verifyToken(req: CustomRequest, res: Response, next: NextFunction) {
-  const token = req.headers.authorization;
+  const authorization = req.headers.authorization || "";
+  const token = authorization.split(" ")[1];
+  console.log(token)
   if (!token) {
     return res.status(403).json({ ok: false, message: "Token is required" });
   }
 
-  jwt.verify(
+   jwt.verify(
     token,
     process.env.BCRYPT_PASSWORD_STRING as string,
     (err, decoded) => {
       if (err) {
-        return res.status(401).json({ ok: false, message: "Invalid token" });
+        console.log("Invalid token")
+        return res.status(401).json({  "message": "Invalid token" });
       }
-
       const decodedToken = decoded as DecodedToken;
 
       if (decodedToken.userId) {
-        req.userId = decodedToken.userId;
-        next();
+        req.body.userId = decodedToken.userId;
+
       } else {
         return res
           .status(401)
